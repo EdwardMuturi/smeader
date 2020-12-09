@@ -1,4 +1,4 @@
-package com.mementoguy.smeader
+package com.mementoguy.smeader.ui
 
 import android.content.ContentResolver
 import android.net.Uri

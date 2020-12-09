@@ -1,10 +1,7 @@
-package com.mementoguy.smeader
+package com.mementoguy.smeader.ui
 
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Telephony
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
@@ -12,6 +9,7 @@ import android.widget.ArrayAdapter
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.mementoguy.smeader.R
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -20,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     val messageList = ArrayList<String>()
 
     lateinit var arrayAdapter: ArrayAdapter<String>
-    lateinit var smsViewModel:  SmsViewModel
+    lateinit var smsViewModel: SmsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
