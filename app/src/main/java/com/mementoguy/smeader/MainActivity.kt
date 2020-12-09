@@ -4,7 +4,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Telephony
-import com.google.android.material.snackbar.Snackbar
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
@@ -30,7 +30,62 @@ class MainActivity : AppCompatActivity() {
 
         requestSmsPermission()
 
+        sendMpesaReceiptToServer(messageList)
+    }
 
+    private fun sendMpesaReceiptToServer(messageList: ArrayList<String>) {
+        messageList.forEach{ message ->
+            val fieldsArray = message.split(".")
+            fieldsArray.extractMpesaFields()
+        }
+    }
+
+    fun List<String>.extractMpesaFields() {
+
+        var mpesaReceipt: String? = null
+        var date: String? = null
+        var time: String? = null
+        var amount: String? = null
+        var am_pm: String? = null
+        var customer: String? = null
+        var accountNumber: String? = null
+
+        this.forEachIndexed { index, message ->
+
+            when (index) {
+                0 -> {
+                        mpesaReceipt = message.extractMpesaField().first()
+                }
+
+                1 -> {
+                    val dateArray = message.extractMpesaField()
+
+                    time = dateArray[4]
+                    am_pm = dateArray[5]
+                    date = "${dateArray[2]} $time $am_pm"
+                    amount = dateArray[6].removePrefix("Ksh")
+
+                }
+
+                2 -> {
+                    val customerArray= message.extractMpesaField()
+                    customer = "+${customerArray.find { it.startsWith("254", true) }}"
+                }
+
+                3 -> {
+                    val accountArray = message.extractMpesaField()
+                    accountNumber = "${accountArray[4]} ${accountArray[5]}"
+                }
+                4->{ val paymentFields= mapOf("transactionReceipt" to mpesaReceipt, "paidOn" to date, "amount" to amount, "accountNumber" to accountNumber, "customer" to customer)
+                    Log.e("Mpesa Field Data $index", paymentFields.entries.toString()) }
+            }
+
+        }
+
+    }
+
+    fun String.extractMpesaField(): List<String> {
+        return this.split(" ")
     }
 
     override fun onStart() {
@@ -40,15 +95,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
@@ -74,23 +125,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun readSms(senderId: String) {
-//        columns of interest
-        val smsColumns =
-            arrayOf(Telephony.TextBasedSmsColumns.BODY, Telephony.TextBasedSmsColumns.ADDRESS)
-//        query selection criteria
+
+        val smsColumns = arrayOf(Telephony.TextBasedSmsColumns.BODY, Telephony.TextBasedSmsColumns.ADDRESS)
         val smsSelection = "${Telephony.TextBasedSmsColumns.ADDRESS} =?"
         val smsArgs = arrayOf(senderId)
-//execute query
-        val smsInboxCursor = contentResolver.query(
-            Uri.parse("content://sms/inbox"),
-            smsColumns,
-            smsSelection,
-            smsArgs,
-            null
-        )
-
+        val smsInboxCursor = contentResolver.query(Uri.parse("content://sms/inbox"), smsColumns, smsSelection, smsArgs, null)
         val indexBody = smsInboxCursor?.getColumnIndex("body")
-//loop through results and add to list adapter
 
         if (!smsInboxCursor!!.moveToFirst()) return
         arrayAdapter.clear()
@@ -109,12 +149,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun filterMpesaSuccessSms(smsBody: String): String {
-//        each successfull transaction has 'Confirmed' keyword before the first fullstop `.`
         val smsFirstLineSubstring = smsBody.split(".").first()
-        var smsMpesaSuccess  = ""
+        var smsMpesaSuccess = ""
 
         if (smsFirstLineSubstring.contains("Confirmed"))
-                smsMpesaSuccess = smsBody
+            smsMpesaSuccess = smsBody
 
         return smsMpesaSuccess
     }
