@@ -4,23 +4,23 @@ import android.util.Log
 import com.mementoguy.smeader.data.api.ServerApi
 import retrofit2.Call
 import retrofit2.Response
+import java.lang.Exception
 
 object SmsRepository {
-    val tag= SmsRepository::class.java.simpleName
-    fun sendPaymentBackUp(paymentBackUP: Map<String, String>) {
+    private val tag = SmsRepository::class.java.simpleName
 
-        ServerApi.getServerApi.sendPaymentBackUp(paymentBackUP)
-            .enqueue(object : retrofit2.Callback<List<String>> {
-                override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        Log.e("Mpesa Fields Map", paymentBackUP.entries.toString())
-                    }
-                }
+    suspend fun sendPaymentBackUp(paymentBackUP: Map<String, String>) {
+        try {
 
-                override fun onFailure(call: Call<List<String>>, t: Throwable) {
-                    Log.e(tag, "sendPaymentBackup Request failed to send payment backup: ${t.localizedMessage}")
-                }
+            val response = ServerApi.getServerApi.sendPaymentBackUp(paymentBackUP)
+            if (response.isSuccessful && response.body() != null) {
+                Log.e("Mpesa Fields Map", paymentBackUP.entries.toString())
+            } else Log.e(tag, "sendPaymentBackup Request failed to send payment backup: ${response.message()}")
 
-            })
+        } catch (e: Exception) {
+            Log.e(tag, "sendPaymentBackup Request failed to send payment backup: ${e.localizedMessage}")
+        }
+
     }
+
 }

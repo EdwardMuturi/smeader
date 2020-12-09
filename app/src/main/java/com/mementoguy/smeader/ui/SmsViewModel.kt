@@ -5,7 +5,9 @@ import android.net.Uri
 import android.provider.Telephony
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.mementoguy.smeader.data.SmsRepository
+import kotlinx.coroutines.launch
 
 class SmsViewModel : ViewModel() {
 
@@ -95,7 +97,7 @@ class SmsViewModel : ViewModel() {
                     "amount" to amount.toString(),
                     "accountNumber" to accountNumber.toString(),
                     "customer" to customer.toString())
-                smsRepository.sendPaymentBackUp(paymentFields)}
+                viewModelScope.launch { smsRepository.sendPaymentBackUp(paymentFields) }}
             }
 
         }
