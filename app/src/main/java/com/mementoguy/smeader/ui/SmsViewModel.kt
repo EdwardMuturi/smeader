@@ -5,8 +5,11 @@ import android.net.Uri
 import android.provider.Telephony
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.mementoguy.smeader.data.SmsRepository
 
 class SmsViewModel : ViewModel() {
+
+    private val smsRepository= SmsRepository
 
     fun readSms(contentResolver: ContentResolver, senderId: String): List<String> {
 
@@ -87,8 +90,12 @@ class SmsViewModel : ViewModel() {
                     val accountArray = message.extractMpesaField()
                     accountNumber = "${accountArray[4]} ${accountArray[5]}"
                 }
-                4->{ val paymentFields= mapOf("transactionReceipt" to mpesaReceipt, "paidOn" to date, "amount" to amount, "accountNumber" to accountNumber, "customer" to customer)
-                    Log.e("Mpesa Fields Map", paymentFields.entries.toString()) }
+                4->{ val paymentFields= mapOf("transactionReceipt" to mpesaReceipt.toString(),
+                    "paidOn" to date.toString(),
+                    "amount" to amount.toString(),
+                    "accountNumber" to accountNumber.toString(),
+                    "customer" to customer.toString())
+                smsRepository.sendPaymentBackUp(paymentFields)}
             }
 
         }
